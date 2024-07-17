@@ -156,7 +156,7 @@ class TripleEncoderTrainer:
             player_odd = ""
             
         for dialog_i in range(len(text_set)):
-            print(dialog_i)
+            # print(dialog_i)
             # slice through the dialog with windows of size self.observation_window
             for i in range(0, len(text_set[dialog_i]) - self.observation_window):
                 dialog_window = text_set[dialog_i][i:i + self.observation_window]
