@@ -144,8 +144,7 @@ class TripleEncoderTrainer:
         min_value = 0.2
         max_value = 1.0
         for key in triplets_dict:
-            triplets_dict[key] = (triplets_dict[key] - min_triplet) / (max_triplet - min_triplet) * (
-                        max_value - min_value) + min_value
+            triplets_dict[key] = (triplets_dict[key] - min_triplet) / (max_triplet - min_triplet) * (max_value - min_value) + min_value
         dialog_dataset = []
 
         # add speaker tokens for conversational sequence modeling
@@ -155,7 +154,9 @@ class TripleEncoderTrainer:
         else:
             player_even = ""
             player_odd = ""
+            
         for dialog_i in range(len(text_set)):
+            print(dialog_i)
             # slice through the dialog with windows of size self.observation_window
             for i in range(0, len(text_set[dialog_i]) - self.observation_window):
                 dialog_window = text_set[dialog_i][i:i + self.observation_window]
@@ -174,8 +175,8 @@ class TripleEncoderTrainer:
 
                     inp_example = InputExample(
                         texts=["[B1] " + player1_token + "[BEFORE] " + dialog_window[context1_idx],
-                               "[B2] " + player2_token + "[BEFORE] " + dialog_window[context2_idx],
-                               "[AFTER] " + dialog_window[-1]],
+                            "[B2] " + player2_token + "[BEFORE] " + dialog_window[context2_idx],
+                            "[AFTER] " + dialog_window[-1]],
                         label=target_cosine)
 
                     dialog_dataset.append(inp_example)
@@ -195,16 +196,16 @@ class TripleEncoderTrainer:
 
                     inp_example = InputExample(
                         texts=["[B1] " + player_token + "[BEFORE] " + dialog_window[context_idx],
-                               "[B2] " + player_token_random + "[BEFORE] " + random_utterance1,
-                               "[AFTER] " + dialog_window[-1]],
+                            "[B2] " + player_token_random + "[BEFORE] " + random_utterance1,
+                            "[AFTER] " + dialog_window[-1]],
                         label=0.0)  # Hard negatives have 0 cosine similarity
 
                     dialog_dataset.append(inp_example)
 
                     inp_example = InputExample(
                         texts=["[B1] " + player_token_random + "[BEFORE] " + random_utterance2,
-                               "[B2] " + player_token + "[BEFORE] " + dialog_window[context_idx],
-                               "[AFTER] " + dialog_window[-1]],
+                            "[B2] " + player_token + "[BEFORE] " + dialog_window[context_idx],
+                            "[AFTER] " + dialog_window[-1]],
                         label=0.0)  # Hard negatives have 0 cosine similarity
 
                     dialog_dataset.append(inp_example)
@@ -218,13 +219,120 @@ class TripleEncoderTrainer:
 
                     inp_example = InputExample(
                         texts=["[B1] " + player_token_random1 + "[BEFORE] " + random_utterance2,
-                               "[B2] " + player_token_random2 + "[BEFORE] " + random_utterance1,
-                               "[AFTER] " + dialog_window[-1]],
+                            "[B2] " + player_token_random2 + "[BEFORE] " + random_utterance1,
+                            "[AFTER] " + dialog_window[-1]],
                         label=0.0)  # Hard negatives have 0 cosine similarity
 
                     dialog_dataset.append(inp_example)
 
-            return dialog_dataset
+        return dialog_dataset
+
+    # def _generate_C3L_data(self, text_set):
+    #     """
+    #     creates the C3L triplets for training triple encoders
+    #     :param text_set: List of List of utterances (strings) i.e. provide (List of dialogues)
+    #     :return:
+    #     """
+    #     # create CCL bi-encoder dict
+    #     bi_dict = {}
+    #     reverse_list = list(range(self.observation_window - 1))[::-1]
+    #     for i in range(1, self.observation_window):
+    #         bi_dict[reverse_list[i - 1]] = (self.observation_window - i) / self.observation_window
+
+    #     # create triple dict from CCL bi-encoders scores
+    #     triplets_dict = {}
+    #     for key in bi_dict:
+    #         for key2 in bi_dict:
+    #             if key < key2:
+    #                 triplets_dict[(key, key2)] = bi_dict[key] + bi_dict[key2]
+
+    #     # normalizing the triplets
+    #     max_triplet = max(triplets_dict.values())
+    #     min_triplet = min(triplets_dict.values())
+    #     min_value = 0.2
+    #     max_value = 1.0
+    #     for key in triplets_dict:
+    #         triplets_dict[key] = (triplets_dict[key] - min_triplet) / (max_triplet - min_triplet) * (
+    #                     max_value - min_value) + min_value
+    #     dialog_dataset = []
+
+    #     # add speaker tokens for conversational sequence modeling
+    #     if self.speaker_token:
+    #         player_even = "[E] "
+    #         player_odd = "[O] "
+    #     else:
+    #         player_even = ""
+    #         player_odd = ""
+    #     for dialog_i in range(len(text_set)):
+    #         # slice through the dialog with windows of size self.observation_window
+    #         for i in range(0, len(text_set[dialog_i]) - self.observation_window):
+    #             dialog_window = text_set[dialog_i][i:i + self.observation_window]
+
+    #             # Determine the player token of the last utterance
+    #             last_utterance_token = player_even if len(dialog_window) % 2 == 0 else player_odd
+
+    #             for (context1_idx, context2_idx), target_cosine in triplets_dict.items():
+    #                 # Determine player tokens based on the last utterance
+    #                 if last_utterance_token == player_even:
+    #                     player1_token = player_odd if context1_idx % 2 == 0 else player_even
+    #                     player2_token = player_odd if context2_idx % 2 == 0 else player_even
+    #                 else:
+    #                     player1_token = player_even if context1_idx % 2 == 0 else player_odd
+    #                     player2_token = player_even if context2_idx % 2 == 0 else player_odd
+
+    #                 inp_example = InputExample(
+    #                     texts=["[B1] " + player1_token + "[BEFORE] " + dialog_window[context1_idx],
+    #                            "[B2] " + player2_token + "[BEFORE] " + dialog_window[context2_idx],
+    #                            "[AFTER] " + dialog_window[-1]],
+    #                     label=target_cosine)
+
+    #                 dialog_dataset.append(inp_example)
+
+    #             # Adding hard negatives with random utterances
+    #             for context_idx in range(4):  # u_1 to u_4
+    #                 # Determine player token based on the last utterance
+    #                 if last_utterance_token == player_even:
+    #                     player_token = player_odd if context_idx % 2 == 0 else player_even
+    #                 else:
+    #                     player_token = player_even if context_idx % 2 == 0 else player_odd
+
+    #                 player_token_random = random.choice([player_even, player_odd])
+
+    #                 random_utterance1 = random.choice(self.random_utterances)
+    #                 random_utterance2 = random.choice(self.random_utterances)
+
+    #                 inp_example = InputExample(
+    #                     texts=["[B1] " + player_token + "[BEFORE] " + dialog_window[context_idx],
+    #                            "[B2] " + player_token_random + "[BEFORE] " + random_utterance1,
+    #                            "[AFTER] " + dialog_window[-1]],
+    #                     label=0.0)  # Hard negatives have 0 cosine similarity
+
+    #                 dialog_dataset.append(inp_example)
+
+    #                 inp_example = InputExample(
+    #                     texts=["[B1] " + player_token_random + "[BEFORE] " + random_utterance2,
+    #                            "[B2] " + player_token + "[BEFORE] " + dialog_window[context_idx],
+    #                            "[AFTER] " + dialog_window[-1]],
+    #                     label=0.0)  # Hard negatives have 0 cosine similarity
+
+    #                 dialog_dataset.append(inp_example)
+
+    #                 # Determine player token based on the last utterance
+    #                 player_token_random1 = random.choice([player_even, player_odd])
+    #                 player_token_random2 = random.choice([player_even, player_odd])
+
+    #                 random_utterance1 = random.choice(self.random_utterances)
+    #                 random_utterance2 = random.choice(self.random_utterances)
+
+    #                 inp_example = InputExample(
+    #                     texts=["[B1] " + player_token_random1 + "[BEFORE] " + random_utterance2,
+    #                            "[B2] " + player_token_random2 + "[BEFORE] " + random_utterance1,
+    #                            "[AFTER] " + dialog_window[-1]],
+    #                     label=0.0)  # Hard negatives have 0 cosine similarity
+
+    #                 dialog_dataset.append(inp_example)
+
+    #         return dialog_dataset
 
     def train(self,
               model_save_path: str,
