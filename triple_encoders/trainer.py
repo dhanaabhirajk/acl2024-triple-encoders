@@ -7,8 +7,8 @@ from typing import List, Callable, Dict, Type
 
 import transformers
 from sentence_transformers import InputExample, models, SentenceTransformer, losses
-from triple_encoders.evaluator import EmbeddingsTripleSimilarityEvaluator
-from triple_encoders.losses import CosineSimilarityTripleEncoderLoss
+from triple_encoders.evaluator.EmbeddingsTripleSimilarityEvaluator import EmbeddingsTripleSimilarityEvaluator
+from triple_encoders.losses.CosineSimilarityTripleEncoderLoss import CosineSimilarityTripleEncoderLoss
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from torch.utils.data.dataloader import default_collate
